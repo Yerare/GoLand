@@ -1,0 +1,1 @@
+ALTER TABLE formulas DROP CONSTRAINT IF EXISTS formulas_level_check;
