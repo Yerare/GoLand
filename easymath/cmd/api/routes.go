@@ -5,17 +5,18 @@ import (
 	"net/http"
 )
 
-func (app *application) routes() *httprouter.Router {
+func (app *application) routes() http.Handler {
 	router := httprouter.New()
-	// Convert the notFoundResponse() helper to a http.Handler using the
-	// http.HandlerFunc() adapter, and then set it as the custom error handler for 404
-	// Not Found responses.
 	router.NotFound = http.HandlerFunc(app.notFoundResponse)
-	// Likewise, convert the methodNotAllowedResponse() helper to a http.Handler and set
-	// it as the custom error handler for 405 Method Not Allowed responses.
 	router.MethodNotAllowed = http.HandlerFunc(app.methodNotAllowedResponse)
 	router.HandlerFunc(http.MethodGet, "/v1/termins", app.terminsHandler)
-	router.HandlerFunc(http.MethodPost, "/v1/formulas", app.createformulaHandler)
-	router.HandlerFunc(http.MethodGet, "/v1/formulas/:id", app.showformulaHandler)
-	return router
+	router.HandlerFunc(http.MethodGet, "/v1/formulas", app.requirePermission("formulas:read", app.listFormulasHandler))
+	router.HandlerFunc(http.MethodPost, "/v1/formulas", app.requirePermission("formulas:write", app.createFormulasHandler))
+	router.HandlerFunc(http.MethodGet, "/v1/formulas/:id", app.requirePermission("formulas:read", app.showFormulasHandler))
+	router.HandlerFunc(http.MethodPatch, "/v1/formulas/:id", app.requirePermission("formulas:write", app.updateFormulasHandler))
+	router.HandlerFunc(http.MethodDelete, "/v1/formulas/:id", app.requirePermission("formulas:write", app.deleteFormulasHandler))
+	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
+	router.HandlerFunc(http.MethodPut, "/v1/users/activated", app.activateUserHandler)
+	router.HandlerFunc(http.MethodPost, "/v1/tokens/authentication", app.createAuthenticationTokenHandler)
+	return app.recoverPanic(app.enableCORS(app.rateLimit(app.authenticate(router))))
 }

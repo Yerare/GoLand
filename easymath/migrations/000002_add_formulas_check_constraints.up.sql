@@ -1,1 +1,1 @@
-ALTER TABLE formulas ADD CONSTRAINT formculas_level_check CHECK (level IN ('light', 'medium', 'hard'));
+ALTER TABLE formulas ADD CONSTRAINT formulas_level_check CHECK (level IN ('light', 'medium', 'hard'));
